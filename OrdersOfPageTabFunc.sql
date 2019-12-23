@@ -2,7 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE FUNCTION GetOrdersForPage(@page int, @ordersOnPage int)
+CREATE FUNCTION GetOrdersForPage(@page int, @ordersOnPage int, @archived bit)
 RETURNS
 @OrdersOfPage TABLE (
 	  [Id] bigint, 
@@ -26,18 +26,27 @@ RETURNS
 )
 AS
 BEGIN
-	declare OrdersPagingIterator cursor
-		for SELECT O.Id FROM [Order] O-- where O.Archived = 0; 
-	open OrdersPagingIterator
-	declare 
+	IF(@archived = 1)
+		BEGIN
+			DECLARE OrdersPagingIterator cursor
+			FOR SELECT O.Id FROM [Order] O; 
+		END
+	ELSE
+		BEGIN
+			DECLARE OrdersPagingIterator cursor
+			FOR SELECT O.Id FROM [Order] O WHERE O.Archived = 0; 
+		END
+		
+	OPEN OrdersPagingIterator
+	DECLARE 
 	@counter int, 
 	@ordersCount int,
 	@readStartIndex int,
 	@readedRows int,
 	@currentOrderId bigint;
-	set @counter = 0;
-	set @ordersCount = (SELECT COUNT(O.Id) FROM [Order] O);
-	set @readStartIndex = @page * @ordersOnPage;
+	SET @counter = 0;
+	SET @ordersCount = (SELECT COUNT(O.Id) FROM [Order] O);
+	SET @readStartIndex = @page * @ordersOnPage;
 	SET @readedRows = 0;
 	IF(@readStartIndex >= @ordersCount)
 	BEGIN
