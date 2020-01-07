@@ -1,8 +1,8 @@
 IF  EXISTS (SELECT * FROM sys.objects 
-WHERE object_id = OBJECT_ID(N'[dbo].[GetOrderDataWithId]') AND type in (N'P', N'PC'))  
-	DROP PROCEDURE [dbo].[GetOrderDataWithId]
+WHERE object_id = OBJECT_ID(N'[dbo].[GetNonArchivedOrdersData]') AND type in (N'P', N'PC'))  
+	DROP PROCEDURE [dbo].[GetNonArchivedOrdersData]
 GO
-CREATE PROCEDURE [dbo].[GetOrderDataWithId] @orderId int
+CREATE PROCEDURE [dbo].[GetNonArchivedOrdersData]
 AS
 BEGIN
 	SELECT O.Id, 
@@ -24,8 +24,8 @@ BEGIN
 		  W.LastName AS [Supervisor.LastName],
 		  W.PhoneNumber AS [Supervisor.PhoneNumber]
 			FROM [Order] O
-			INNER JOIN [Worker] W on O.SupervisorId = W.Id
+			LEFT JOIN [Worker] W on O.SupervisorId = W.Id
 			WHERE O.Archived = 0;
 END
 
---EXEC GetOrderDataWithId @orderId = 9;
+--EXEC GetNonArchivedOrdersData;
