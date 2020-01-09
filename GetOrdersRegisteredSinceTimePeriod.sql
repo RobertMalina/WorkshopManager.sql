@@ -1,0 +1,2 @@
+--GetOrdersRegisteredSinceTimePeriod
+--Funkcja która zwróci wszystkie zlecenia zarejestrowane w ciągu ostatnich dni

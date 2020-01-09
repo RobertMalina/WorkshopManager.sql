@@ -14,7 +14,7 @@ BEGIN
 		  O.DateStart,
 		  O.DateEnd, 
 		  O.Cost, 
-		  O.EstimatedTime, 
+		  O.EstimatedTimeInHours, 
 		  O.Status,
 		  (SELECT C.Id FROM [Client] C where C.Id = O.ClientId) AS [Client.Id],
 		  (SELECT C.FirstName FROM [Client] C where C.Id = O.ClientId) AS [Client.FirstName],
