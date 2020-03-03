@@ -9,7 +9,10 @@ BEGIN
 		EXEC [dbo].[WorkerConstraintsRemove];
 		TRUNCATE TABLE [dbo].[Order];
 		TRUNCATE TABLE [dbo].[Worker];
+		TRUNCATE TABLE [dbo].[Part];
 
+		DELETE FROM [dbo].[AppUserToAppRole];
+		DBCC CHECKIDENT ('[AppUserToAppRole]', RESEED, 0);
 		DELETE FROM [dbo].[AppUser];
 		DBCC CHECKIDENT ('[AppUser]', RESEED, 0);
 

@@ -1,8 +1,17 @@
+IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[GetOrdersForPage]'))
+	DROP FUNCTION [dbo].[GetOrdersForPage]
+GO
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE FUNCTION GetOrdersForPage(@page int, @ordersOnPage int, @archived bit)
+CREATE FUNCTION [dbo].[GetOrdersForPage](
+	@page int, 
+	@ordersOnPage int, 
+	@containsRegistered bit = 1,
+	@containsInProgress bit = 1,
+	@containsFinished bit = 1
+	)
 RETURNS
 @OrdersOfPage TABLE (
 	  [Id] bigint, 
@@ -15,7 +24,7 @@ RETURNS
       [DateEnd] datetime2(7),
       [Cost] decimal(9, 2),
       [EstimatedTimeInHours] decimal(3, 1),
-      [Status] tinyint,
+      [Status] nvarchar(128),
       [Client.Id] bigint,
       [Client.FirstName] nvarchar(64),
       [Client.LastName] nvarchar(64),
@@ -26,17 +35,10 @@ RETURNS
 )
 AS
 BEGIN
-	IF(@archived = 1)
-		BEGIN
-			DECLARE OrdersPagingIterator cursor
-			FOR SELECT O.Id FROM [Order] O; 
-		END
-	ELSE
-		BEGIN
-			DECLARE OrdersPagingIterator cursor
-			FOR SELECT O.Id FROM [Order] O WHERE O.Archived = 0; 
-		END
-		
+	DECLARE OrdersPagingIterator cursor
+	FOR SELECT O.Id FROM [dbo].[OrdersRegardingStatuses]
+	(@containsRegistered, @containsInProgress, @containsFinished ) O;
+	
 	OPEN OrdersPagingIterator
 	DECLARE 
 	@counter int, 
@@ -45,12 +47,15 @@ BEGIN
 	@readedRows int,
 	@currentOrderId bigint;
 	SET @counter = 0;
-	SET @ordersCount = (SELECT COUNT(O.Id) FROM [Order] O);
+	SET @ordersCount = @@CURSOR_ROWS;
+
 	SET @readStartIndex = @page * @ordersOnPage;
 	SET @readedRows = 0;
-	IF(@readStartIndex >= @ordersCount)
+	
+	IF(@ordersCount <= @readStartIndex)
 	BEGIN
-		RETURN;
+		SET @readStartIndex = 0;
+		-- could be: PRINT 'Requested page would not contain any data (range exceeded), first will be page returned instead...'
 	END
 
 	FETCH NEXT FROM OrdersPagingIterator into @currentOrderId
